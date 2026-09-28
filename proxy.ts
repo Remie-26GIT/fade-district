@@ -17,10 +17,6 @@ export async function proxy(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            response = NextResponse.next({
-              request,
-            });
-
             response.cookies.set(name, value, options);
           });
         },
@@ -32,10 +28,10 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
-    return NextResponse.redirect(
-      new URL("/admin/login", request.url)
-    );
+  const pathname = request.nextUrl.pathname;
+
+  if (!user && pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
   return response;

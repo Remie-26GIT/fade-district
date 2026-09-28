@@ -7,9 +7,6 @@ import { supabase } from "../../../lib/supabase";
 function ConfirmationContent() {
   const searchParams = useSearchParams();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const service = searchParams.get("service") || "";
   const date = searchParams.get("date") || "";
   const time = searchParams.get("time") || "";
@@ -17,27 +14,21 @@ function ConfirmationContent() {
   const phone = searchParams.get("phone") || "";
   const email = searchParams.get("email") || "";
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleConfirm = async () => {
     setLoading(true);
     setError("");
 
-    if (!service) {
-      setError("Please select a service before confirming.");
-      setLoading(false);
-      return;
-    }
-
-    if (!date || !time) {
-      setError("Please select a valid date and time before confirming.");
-      setLoading(false);
-      return;
-    }
-
-    if (!name || !phone) {
-      setError("Please provide your name and phone number.");
-      setLoading(false);
-      return;
-    }
+    console.log("BOOKING ATTEMPT:", {
+      service,
+      date,
+      time,
+      name,
+      phone,
+      email,
+    });
 
     const { error } = await supabase.from("bookings").insert({
       service,
@@ -46,153 +37,92 @@ function ConfirmationContent() {
       customer_name: name,
       customer_phone: phone,
       customer_email: email || null,
+      status: "pending",
     });
 
     if (error) {
-      console.error("BOOKING INSERT ERROR:", error);
+      console.error("BOOKING INSERT ERROR MESSAGE:", error.message);
+      console.error("BOOKING INSERT ERROR CODE:", error.code);
+      console.error("BOOKING INSERT ERROR DETAILS:", error.details);
+      console.error("BOOKING INSERT ERROR HINT:", error.hint);
+
       setError(error.message);
       setLoading(false);
       return;
     }
 
-    const params = new URLSearchParams();
+    console.log("BOOKING INSERT SUCCESS");
 
-    params.set("service", service);
-    params.set("date", date);
-    params.set("time", time);
-    params.set("name", name);
-
-    window.location.href = `/book/success?${params.toString()}`;
+    window.location.assign("/book/success");
   };
 
   return (
-    <main className="min-h-screen bg-black px-5 py-10 text-white sm:px-6 sm:py-16">
-      <div className="mx-auto max-w-xl">
+    <main className="min-h-screen bg-black px-6 py-12 text-white">
+      <div className="mx-auto max-w-2xl">
+        <p className="text-sm uppercase tracking-[0.25em] text-zinc-500">
+          Fade District
+        </p>
 
-        {/* Header */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
-            Fade District
-          </p>
+        <h1 className="mt-4 text-4xl font-bold">
+          Confirm appointment
+        </h1>
 
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Confirm your booking
-          </h1>
+        <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-zinc-500">Service</p>
+              <p className="mt-1 font-semibold">{service}</p>
+            </div>
 
-          <p className="mt-3 text-sm leading-6 text-zinc-400 sm:text-base">
-            Take a quick look over your appointment details before confirming.
-          </p>
+            <div>
+              <p className="text-sm text-zinc-500">Date</p>
+              <p className="mt-1 font-semibold">{date}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">Time</p>
+              <p className="mt-1 font-semibold">{time}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">Name</p>
+              <p className="mt-1 font-semibold">{name}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">Phone</p>
+              <p className="mt-1 font-semibold">{phone}</p>
+            </div>
+
+            {email && (
+              <div>
+                <p className="text-sm text-zinc-500">Email</p>
+                <p className="mt-1 font-semibold">{email}</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Booking card */}
-        <div className="mt-8 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950">
-
-          {/* Appointment */}
-          <div className="p-6 sm:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Appointment
+        {error && (
+          <div className="mt-6 rounded-xl border border-red-800 bg-red-950 p-4">
+            <p className="font-semibold text-red-400">
+              Booking could not be created
             </p>
 
-            <div className="mt-5 space-y-5">
-
-              <div>
-                <p className="text-xs text-zinc-500">Service</p>
-                <p className="mt-1 text-lg font-semibold">
-                  {service || "Selected service"}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-zinc-500">Date</p>
-                  <p className="mt-1 font-medium">
-                    {date || "Selected date"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-zinc-500">Time</p>
-                  <p className="mt-1 font-medium">
-                    {time || "Selected time"}
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800" />
-
-          {/* Customer */}
-          <div className="p-6 sm:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Your details
-            </p>
-
-            <div className="mt-5 space-y-4">
-
-              <div>
-                <p className="text-xs text-zinc-500">Name</p>
-                <p className="mt-1 font-medium">
-                  {name || "Your name"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-zinc-500">Phone</p>
-                <p className="mt-1 font-medium">
-                  {phone || "Your phone number"}
-                </p>
-              </div>
-
-              {email && (
-                <div>
-                  <p className="text-xs text-zinc-500">Email</p>
-                  <p className="mt-1 break-all font-medium">
-                    {email}
-                  </p>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <>
-              <div className="border-t border-zinc-800" />
-
-              <div className="p-6 sm:p-7">
-                <div className="rounded-2xl border border-red-900/60 bg-red-950/30 p-4">
-                  <p className="text-sm font-semibold text-red-400">
-                    Booking could not be confirmed
-                  </p>
-
-                  <p className="mt-2 text-sm leading-5 text-red-300">
-                    {error}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Confirm */}
-          <div className="border-t border-zinc-800 p-6 sm:p-7">
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={loading}
-              className="w-full rounded-full bg-white px-6 py-4 text-sm font-semibold text-black transition hover:bg-zinc-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? "Confirming booking..." : "Confirm booking"}
-            </button>
-
-            <p className="mt-3 text-center text-xs text-zinc-600">
-              Your appointment details will be saved securely.
+            <p className="mt-2 text-sm text-red-300">
+              {error}
             </p>
           </div>
+        )}
 
-        </div>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={loading}
+          className="mt-8 w-full rounded-full bg-white px-6 py-4 font-semibold text-black disabled:opacity-50"
+        >
+          {loading ? "Creating booking..." : "Confirm appointment"}
+        </button>
       </div>
     </main>
   );
@@ -202,16 +132,8 @@ export default function ConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-black px-5 py-12 text-white">
-          <div className="mx-auto max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
-              Fade District
-            </p>
-
-            <h1 className="mt-4 text-3xl font-bold">
-              Loading booking...
-            </h1>
-          </div>
+        <main className="min-h-screen bg-black px-6 py-12 text-white">
+          Loading...
         </main>
       }
     >
